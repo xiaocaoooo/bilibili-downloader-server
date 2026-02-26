@@ -27,6 +27,15 @@ func NewHandler(cookie string) *Handler {
 	}
 }
 
+// Health 处理健康检查请求
+// GET /bilibili/download/health
+// 返回简单的健康状态
+func (h *Handler) Health(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"status": "ok",
+	})
+}
+
 // Download 处理通用下载请求
 // GET /bilibili/download/:id
 // 从 URL 参数获取 id，自动判断是 AV 号还是 BV 号，下载视频并返回

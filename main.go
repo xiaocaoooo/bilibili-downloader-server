@@ -48,6 +48,8 @@ func main() {
 	router := gin.Default()
 
 	// 5. 定义路由
+	// 健康检查路由
+	router.GET("/bilibili/download/health", h.Health)
 	// 通用下载路由，支持 AV 号和 BV 号
 	router.GET("/bilibili/download/:id", h.Download)
 
