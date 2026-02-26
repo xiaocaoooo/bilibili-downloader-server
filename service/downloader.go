@@ -46,7 +46,7 @@ func NewDownloader(cookie string) *Downloader {
 func (d *Downloader) DownloadFile(url, referer, filename string) error {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return fmt.Errorf("创建请求失败：%w", err)
+		return fmt.Errorf("Failed to create request: %w", err)
 	}
 
 	// 设置请求头
@@ -55,26 +55,26 @@ func (d *Downloader) DownloadFile(url, referer, filename string) error {
 	// 发送请求
 	resp, err := d.httpClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("请求失败：%w", err)
+		return fmt.Errorf("Request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	// 检查响应状态
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("下载失败，状态码：%d", resp.StatusCode)
+		return fmt.Errorf("Download failed, status code: %d", resp.StatusCode)
 	}
 
 	// 创建文件
 	file, err := os.Create(filename)
 	if err != nil {
-		return fmt.Errorf("创建文件失败：%w", err)
+		return fmt.Errorf("Failed to create file: %w", err)
 	}
 	defer file.Close()
 
 	// 写入文件
 	_, err = io.Copy(file, resp.Body)
 	if err != nil {
-		return fmt.Errorf("写入文件失败：%w", err)
+		return fmt.Errorf("Failed to write file: %w", err)
 	}
 
 	return nil
@@ -114,7 +114,7 @@ func (d *Downloader) DownloadAndMerge(videoUrl, audioUrl, bvid string) (io.ReadC
 	// 创建临时目录
 	tempDir, err := os.MkdirTemp("", "bilibili_downloader_*")
 	if err != nil {
-		return nil, fmt.Errorf("创建临时目录失败：%w", err)
+		return nil, fmt.Errorf("Failed to create temporary directory: %w", err)
 	}
 	defer func() {
 		// 延迟清理临时目录（在函数返回前）
@@ -178,19 +178,19 @@ func (d *Downloader) DownloadAndMerge(videoUrl, audioUrl, bvid string) (io.ReadC
 	if videoErr != nil {
 		// 清理临时文件
 		cleanupFiles(tempDir, videoPath, audioPath, outputPath)
-		return nil, fmt.Errorf("视频下载失败：%w", videoErr)
+		return nil, fmt.Errorf("Video download failed: %w", videoErr)
 	}
 	if audioErr != nil {
 		// 清理临时文件
 		cleanupFiles(tempDir, videoPath, audioPath, outputPath)
-		return nil, fmt.Errorf("音频下载失败：%w", audioErr)
+		return nil, fmt.Errorf("Audio download failed: %w", audioErr)
 	}
 
 	// 使用 FFmpeg 合并
 	err = d.mergeWithFfmpeg(videoPath, audioPath, outputPath)
 	if err != nil {
 		cleanupFiles(tempDir, videoPath, audioPath, outputPath)
-		return nil, fmt.Errorf("FFmpeg 合并失败：%w", err)
+		return nil, fmt.Errorf("FFmpeg merge failed: %w", err)
 	}
 
 	// 清理音视频临时文件，保留输出文件
@@ -201,7 +201,7 @@ func (d *Downloader) DownloadAndMerge(videoUrl, audioUrl, bvid string) (io.ReadC
 	if err != nil {
 		// 清理临时目录
 		os.RemoveAll(tempDir)
-		return nil, fmt.Errorf("打开输出文件失败：%w", err)
+		return nil, fmt.Errorf("Failed to open output file: %w", err)
 	}
 
 	// 返回文件读取器，并在关闭时清理临时文件
@@ -244,7 +244,7 @@ func (d *Downloader) mergeWithFfmpeg(videoPath, audioPath, outputPath string) er
 	// 检查 FFmpeg 是否安装
 	ffmpegPath, err := exec.LookPath("ffmpeg")
 	if err != nil {
-		return fmt.Errorf("未找到 FFmpeg，请确保已安装：%w", err)
+		return fmt.Errorf("FFmpeg not found, please ensure it is installed: %w", err)
 	}
 
 	// 构建 FFmpeg 命令
@@ -260,7 +260,7 @@ func (d *Downloader) mergeWithFfmpeg(videoPath, audioPath, outputPath string) er
 	// 执行命令
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("FFmpeg 执行失败：%w, 输出：%s", err, string(output))
+		return fmt.Errorf("FFmpeg execution failed: %w, output: %s", err, string(output))
 	}
 
 	return nil

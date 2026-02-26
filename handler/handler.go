@@ -43,7 +43,7 @@ func (h *Handler) Download(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "缺少视频 ID 参数",
+			"error": "Missing video ID parameter",
 		})
 		return
 	}
@@ -56,7 +56,7 @@ func (h *Handler) Download(c *gin.Context) {
 	page := 1
 	if _, err := fmt.Sscanf(p, "%d", &page); err != nil || page < 1 {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "无效的分 P 参数",
+			"error": "Invalid page parameter",
 		})
 		return
 	}
@@ -65,7 +65,7 @@ func (h *Handler) Download(c *gin.Context) {
 	qn := 80
 	if _, err := fmt.Sscanf(quality, "%d", &qn); err != nil || qn < 1 {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "无效的清晰度参数",
+			"error": "Invalid quality parameter",
 		})
 		return
 	}
@@ -88,13 +88,13 @@ func (h *Handler) Download(c *gin.Context) {
 		bvid, err = h.avidToBvid(id, page)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "AV 号转换失败：" + err.Error(),
+				"error": "AV to BV conversion failed: " + err.Error(),
 			})
 			return
 		}
 	} else {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "无效的视频 ID 格式",
+			"error": "Invalid video ID format",
 		})
 		return
 	}
@@ -115,7 +115,7 @@ func (h *Handler) Download(c *gin.Context) {
 	_, err = io.Copy(c.Writer, reader)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "写入响应失败：" + err.Error(),
+			"error": "Failed to write response: " + err.Error(),
 		})
 		return
 	}
@@ -140,31 +140,31 @@ func (h *Handler) downloadVideo(bvid string, page int, quality int) (io.ReadClos
 	// 1. 获取 CID
 	cid, err := h.apiService.GetCid(bvid, page)
 	if err != nil {
-		return nil, fmt.Errorf("获取 CID 失败：%w", err)
+		return nil, fmt.Errorf("Failed to get CID: %w", err)
 	}
 
 	// 2. 获取播放地址
 	playUrlData, err := h.apiService.GetPlayUrl(bvid, cid, quality)
 	if err != nil {
-		return nil, fmt.Errorf("获取播放地址失败：%w", err)
+		return nil, fmt.Errorf("Failed to get play URL: %w", err)
 	}
 
 	// 3. 提取视频和音频地址
 	if len(playUrlData.Dash.Video) == 0 || len(playUrlData.Dash.Audio) == 0 {
-		return nil, fmt.Errorf("未找到视频或音频流")
+		return nil, fmt.Errorf("No video or audio stream found")
 	}
 
 	videoUrl := service.GetVideoUrl(playUrlData.Dash.Video[0])
 	audioUrl := service.GetAudioUrl(playUrlData.Dash.Audio[0])
 
 	if videoUrl == "" || audioUrl == "" {
-		return nil, fmt.Errorf("视频或音频地址为空")
+		return nil, fmt.Errorf("Video or audio URL is empty")
 	}
 
 	// 4. 下载并合并
 	reader, err := h.downloader.DownloadAndMerge(videoUrl, audioUrl, bvid)
 	if err != nil {
-		return nil, fmt.Errorf("下载合并失败：%w", err)
+		return nil, fmt.Errorf("Failed to download and merge: %w", err)
 	}
 
 	return reader, nil
@@ -177,7 +177,7 @@ func (h *Handler) handleError(c *gin.Context, err error) {
 	// 检查是否是视频不存在的错误
 	if strings.Contains(errStr, "未找到视频") || strings.Contains(errStr, "10002") {
 		c.JSON(http.StatusNotFound, gin.H{
-			"error": "视频不存在：" + err.Error(),
+			"error": "Video does not exist: " + err.Error(),
 		})
 		return
 	}
@@ -185,14 +185,14 @@ func (h *Handler) handleError(c *gin.Context, err error) {
 	// 检查是否是 Cookie 无效的错误
 	if strings.Contains(errStr, "权限") || strings.Contains(errStr, "-403") || strings.Contains(errStr, "Cookie") {
 		c.JSON(http.StatusForbidden, gin.H{
-			"error": "Cookie 无效或权限不足：" + err.Error(),
+			"error": "Invalid Cookie or insufficient permissions: " + err.Error(),
 		})
 		return
 	}
 
 	// 其他错误返回 500
 	c.JSON(http.StatusInternalServerError, gin.H{
-		"error": "服务器错误：" + err.Error(),
+		"error": "Server error: " + err.Error(),
 	})
 }
 
@@ -207,7 +207,7 @@ func (h *Handler) avidToBvid(avid string, page int) (string, error) {
 
 	req, err := http.NewRequest(http.MethodGet, apiUrl, nil)
 	if err != nil {
-		return "", fmt.Errorf("创建请求失败：%w", err)
+		return "", fmt.Errorf("Failed to create request: %w", err)
 	}
 
 	// 设置请求头
@@ -216,30 +216,30 @@ func (h *Handler) avidToBvid(avid string, page int) (string, error) {
 	// 发送请求
 	resp, err := h.apiService.GetHttpClient().Do(req)
 	if err != nil {
-		return "", fmt.Errorf("请求失败：%w", err)
+		return "", fmt.Errorf("Request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	// 读取响应体
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("读取响应体失败：%w", err)
+		return "", fmt.Errorf("Failed to read response body: %w", err)
 	}
 
 	// 解析 JSON 响应
 	var pagelistResp service.PagelistResponse
 	if err := service.UnmarshalPagelistResponse(body, &pagelistResp); err != nil {
-		return "", fmt.Errorf("解析 JSON 失败：%w", err)
+		return "", fmt.Errorf("Failed to parse JSON: %w", err)
 	}
 
 	// 检查响应码
 	if pagelistResp.Code != 0 {
-		return "", fmt.Errorf("API 返回错误：code=%d, message=%s", pagelistResp.Code, pagelistResp.Message)
+		return "", fmt.Errorf("API returned error: code=%d, message=%s", pagelistResp.Code, pagelistResp.Message)
 	}
 
 	// 检查数据是否为空
 	if len(pagelistResp.Data) == 0 {
-		return "", fmt.Errorf("未找到视频信息")
+		return "", fmt.Errorf("Video information not found")
 	}
 
 	// 返回 BV 号（从 Vid 字段获取）
@@ -247,7 +247,7 @@ func (h *Handler) avidToBvid(avid string, page int) (string, error) {
 	if bvid == "" {
 		// 如果 Vid 为空，尝试从第一个分 P 信息中获取
 		// 注意：当前 API 响应中 Vid 字段可能为空，需要后续补充
-		return "", fmt.Errorf("未找到 BV 号信息")
+		return "", fmt.Errorf("BV ID not found")
 	}
 	return bvid, nil
 }

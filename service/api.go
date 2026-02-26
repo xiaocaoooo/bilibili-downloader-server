@@ -196,7 +196,7 @@ func (s *ApiService) GetCid(bvid string, page int) (int64, error) {
 
 	req, err := http.NewRequest(http.MethodGet, apiUrl, nil)
 	if err != nil {
-		return 0, fmt.Errorf("创建请求失败：%w", err)
+		return 0, fmt.Errorf("Failed to create request: %w", err)
 	}
 
 	// 设置请求头
@@ -205,30 +205,30 @@ func (s *ApiService) GetCid(bvid string, page int) (int64, error) {
 	// 发送请求
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
-		return 0, fmt.Errorf("请求失败：%w", err)
+		return 0, fmt.Errorf("Request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	// 读取响应体
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return 0, fmt.Errorf("读取响应体失败：%w", err)
+		return 0, fmt.Errorf("Failed to read response body: %w", err)
 	}
 
 	// 解析 JSON 响应
 	var pagelistResp PagelistResponse
 	if err := json.Unmarshal(body, &pagelistResp); err != nil {
-		return 0, fmt.Errorf("解析 JSON 失败：%w", err)
+		return 0, fmt.Errorf("Failed to parse JSON: %w", err)
 	}
 
 	// 检查响应码
 	if pagelistResp.Code != 0 {
-		return 0, fmt.Errorf("API 返回错误：code=%d, message=%s", pagelistResp.Code, pagelistResp.Message)
+		return 0, fmt.Errorf("API returned error: code=%d, message=%s", pagelistResp.Code, pagelistResp.Message)
 	}
 
 	// 检查数据是否为空
 	if len(pagelistResp.Data) == 0 {
-		return 0, fmt.Errorf("未找到视频分 P 信息")
+		return 0, fmt.Errorf("Video page information not found")
 	}
 
 	// 返回第一个分 P 的 CID
@@ -262,7 +262,7 @@ func (s *ApiService) GetWbiKeys() (*WbiKeys, error) {
 
 	req, err := http.NewRequest(http.MethodGet, apiUrl, nil)
 	if err != nil {
-		return nil, fmt.Errorf("创建请求失败：%w", err)
+		return nil, fmt.Errorf("Failed to create request: %w", err)
 	}
 
 	// 设置请求头
@@ -271,25 +271,25 @@ func (s *ApiService) GetWbiKeys() (*WbiKeys, error) {
 	// 发送请求
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("请求失败：%w", err)
+		return nil, fmt.Errorf("Request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	// 读取响应体
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("读取响应体失败：%w", err)
+		return nil, fmt.Errorf("Failed to read response body: %w", err)
 	}
 
 	// 解析 JSON 响应
 	var navResp NavResponse
 	if err := json.Unmarshal(body, &navResp); err != nil {
-		return nil, fmt.Errorf("解析 JSON 失败：%w", err)
+		return nil, fmt.Errorf("Failed to parse JSON: %w", err)
 	}
 
 	// 检查响应码
 	if navResp.Code != 0 {
-		return nil, fmt.Errorf("API 返回错误：code=%d, message=%s", navResp.Code, navResp.Message)
+		return nil, fmt.Errorf("API returned error: code=%d, message=%s", navResp.Code, navResp.Message)
 	}
 
 	// 从 URL 中提取 img_key 和 sub_key
@@ -297,7 +297,7 @@ func (s *ApiService) GetWbiKeys() (*WbiKeys, error) {
 	subKey := utils.ExtractKeyFromURL(navResp.Data.WbiImg.SubUrl)
 
 	if imgKey == "" || subKey == "" {
-		return nil, fmt.Errorf("无效的 WBI key 格式")
+		return nil, fmt.Errorf("Invalid WBI key format")
 	}
 
 	// 缓存密钥
@@ -321,7 +321,7 @@ func (s *ApiService) GetPlayUrl(bvid string, cid int64, quality int) (*PlayUrlDa
 	// 获取 WBI Keys
 	wbiKeys, err := s.GetWbiKeys()
 	if err != nil {
-		return nil, fmt.Errorf("获取 WBI Keys 失败：%w", err)
+		return nil, fmt.Errorf("Failed to get WBI Keys: %w", err)
 	}
 
 	// 构建原始参数
@@ -345,7 +345,7 @@ func (s *ApiService) GetPlayUrl(bvid string, cid int64, quality int) (*PlayUrlDa
 
 	req, err := http.NewRequest(http.MethodGet, apiUrl, nil)
 	if err != nil {
-		return nil, fmt.Errorf("创建请求失败：%w", err)
+		return nil, fmt.Errorf("Failed to create request: %w", err)
 	}
 
 	// 设置请求头，Referer 需要包含 BV 号
@@ -355,25 +355,25 @@ func (s *ApiService) GetPlayUrl(bvid string, cid int64, quality int) (*PlayUrlDa
 	// 发送请求
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("请求失败：%w", err)
+		return nil, fmt.Errorf("Request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	// 读取响应体
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("读取响应体失败：%w", err)
+		return nil, fmt.Errorf("Failed to read response body: %w", err)
 	}
 
 	// 解析 JSON 响应
 	var playUrlResp PlayUrlResponse
 	if err := json.Unmarshal(body, &playUrlResp); err != nil {
-		return nil, fmt.Errorf("解析 JSON 失败：%w", err)
+		return nil, fmt.Errorf("Failed to parse JSON: %w", err)
 	}
 
 	// 检查响应码
 	if playUrlResp.Code != 0 {
-		return nil, fmt.Errorf("API 返回错误：code=%d, message=%s", playUrlResp.Code, playUrlResp.Message)
+		return nil, fmt.Errorf("API returned error: code=%d, message=%s", playUrlResp.Code, playUrlResp.Message)
 	}
 
 	return &playUrlResp.Data, nil

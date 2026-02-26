@@ -23,7 +23,7 @@ func main() {
 	// 1. 读取环境变量
 	cookie := os.Getenv(envCookie)
 	if cookie == "" {
-		log.Fatalf("错误：必须设置环境变量 %s\n", envCookie)
+		log.Fatalf("Error: Environment variable %s must be set\n", envCookie)
 	}
 
 	port := os.Getenv(envPort)
@@ -34,11 +34,11 @@ func main() {
 	// 2. 启动检查
 	// 检查 FFmpeg 是否已安装
 	if err := checkFFmpeg(); err != nil {
-		log.Fatalf("错误：%v\n请确保已安装 FFmpeg\n", err)
+		log.Fatalf("Error: %v\nPlease ensure FFmpeg is installed\n", err)
 	}
 
-	log.Println("✓ FFmpeg 已安装")
-	log.Println("✓ Cookie 已配置")
+	log.Println("✓ FFmpeg installed")
+	log.Println("✓ Cookie configured")
 
 	// 3. 创建 Handler
 	h := handler.NewHandler(cookie)
@@ -55,13 +55,13 @@ func main() {
 
 	// 6. 启动服务器
 	addr := ":" + port
-	log.Printf("🚀 服务器启动中，监听地址：%s\n", addr)
-	log.Printf("📥 下载端点：\n")
+	log.Printf("🚀 Server starting, listening on: %s\n", addr)
+	log.Printf("📥 Download endpoints:\n")
 	log.Printf("   - GET http://localhost%s/bilibili/download/:bvid\n", addr)
 	log.Printf("   - GET http://localhost%s/bilibili/download/:avid\n", addr)
 
 	if err := router.Run(addr); err != nil {
-		log.Fatalf("启动服务器失败：%v\n", err)
+		log.Fatalf("Failed to start server: %v\n", err)
 	}
 }
 
@@ -69,7 +69,7 @@ func main() {
 func checkFFmpeg() error {
 	cmd := exec.Command("ffmpeg", "-version")
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("FFmpeg 未安装或不可用：%w", err)
+		return fmt.Errorf("FFmpeg not installed or unavailable: %w", err)
 	}
 	return nil
 }
