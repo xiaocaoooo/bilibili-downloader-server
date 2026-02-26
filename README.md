@@ -28,7 +28,7 @@
 ### 项目结构
 
 ```
-bilibili-downloader-server/
+bilibili-downloader-server-server/
 ├── main.go              # 主程序入口
 ├── handler/
 │   └── handler.go       # HTTP 请求处理器
@@ -68,10 +68,10 @@ bilibili-downloader-server/
 
 ```bash
 docker run -d \
-  --name bilibili-downloader \
+  --name bilibili-downloader-server \
   -p 8080:8080 \
   -e BILIBILI_COOKIE="your_cookie_here" \
-  xiaocaoooo/bilibili-downloader:latest
+  xiaocaoooo/bilibili-downloader-server:latest
 ```
 
 #### 使用 Docker Compose
@@ -82,9 +82,9 @@ docker run -d \
 # docker-compose.yml (使用 Docker Hub 镜像)
 version: '3'
 services:
-  bilibili-downloader:
-    image: xiaocaoooo/bilibili-downloader:latest
-    container_name: bilibili-downloader
+  bilibili-downloader-server:
+    image: xiaocaoooo/bilibili-downloader-server:latest
+    container_name: bilibili-downloader-server
     ports:
       - "8080:8080"
     environment:
@@ -111,12 +111,12 @@ curl http://localhost:8080/bilibili/download/BV1xx411c7mD
 1. 克隆项目：
    ```bash
    git clone <repository-url>
-   cd bilibili-downloader-server
+   cd bilibili-downloader-server-server
    ```
 
 2. 构建镜像：
    ```bash
-   docker build -t bilibili-downloader-server .
+   docker build -t bilibili-downloader-server-server .
    ```
 
 3. 运行容器：
@@ -124,8 +124,8 @@ curl http://localhost:8080/bilibili/download/BV1xx411c7mD
    docker run -d \
      -p 8080:8080 \
      -e BILIBILI_COOKIE="your_cookie_here" \
-     --name bilibili-downloader-server \
-     bilibili-downloader-server
+     --name bilibili-downloader-server-server \
+     bilibili-downloader-server-server
    ```
 
 #### 使用 Docker Compose（从源码构建）
@@ -133,7 +133,7 @@ curl http://localhost:8080/bilibili/download/BV1xx411c7mD
 1. 克隆项目：
    ```bash
    git clone <repository-url>
-   cd bilibili-downloader-server
+   cd bilibili-downloader-server-server
    ```
 
 2. 创建 `.env` 文件并配置 Cookie：
@@ -160,7 +160,7 @@ curl http://localhost:8080/bilibili/download/BV1xx411c7mD
 1. 克隆项目：
    ```bash
    git clone <repository-url>
-   cd bilibili-downloader-server
+   cd bilibili-downloader-server-server
    ```
 
 2. 安装依赖：
@@ -288,12 +288,12 @@ curl -O -J "http://localhost:8080/bilibili/download/BV1xx411c7mD?p=2&quality=64"
 
 ```yaml
 services:
-  bilibili-downloader-server:
+  bilibili-downloader-server-server:
     build:
       context: .
       dockerfile: Dockerfile
-    image: xiaocaoooo/bilibili-downloader-server:latest
-    container_name: bilibili-downloader-server
+    image: xiaocaoooo/bilibili-downloader-server-server:latest
+    container_name: bilibili-downloader-server-server
     restart: unless-stopped
     ports:
       - "${PORT:-8080}:8080"
