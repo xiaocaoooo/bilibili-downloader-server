@@ -1,33 +1,31 @@
-# 构建阶段 (Go)
-FROM golang:1.21-alpine AS builder
-RUN apk add --no-cache git
+# Build stage
+FROM rust:1-bookworm AS builder
 WORKDIR /build
-COPY go.mod go.sum ./
-RUN go mod download
-COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o server .
+COPY Cargo.toml Cargo.lock ./
+COPY src ./src
+RUN cargo build --release
 
-# 运行阶段
-FROM alpine:3.19
+# Runtime stage
+FROM debian:bookworm-slim
 
-# 设置时区和证书
-RUN apk --no-cache add ca-certificates tzdata
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates tzdata wget \
+    && rm -rf /var/lib/apt/lists/*
 
-# 核心优化：引入静态 FFmpeg
-COPY --from=mwader/static-ffmpeg:6.1.1 /ffmpeg /usr/local/bin/
+# Static FFmpeg
+COPY --from=mwader/static-ffmpeg:6.1.1 /ffmpeg /usr/local/bin/ffmpeg
 
-# 权限处理
-RUN addgroup -g 1000 appgroup && \
-    adduser -u 1000 -G appgroup -D appuser
+RUN groupadd -g 1000 appgroup \
+    && useradd -u 1000 -g appgroup -m appuser
+
 WORKDIR /app
-COPY --from=builder /build/server ./bilibili-downloader-server
+COPY --from=builder /build/target/release/bilibili-downloader-server /app/bilibili-downloader-server
 RUN chown -R appuser:appgroup /app
 
 USER appuser
 EXPOSE 8080
 
-# 健康检查保持不变
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/bilibili/download/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/api/v1/health || exit 1
 
-ENTRYPOINT ["./bilibili-downloader-server"]
+ENTRYPOINT ["/app/bilibili-downloader-server"]
